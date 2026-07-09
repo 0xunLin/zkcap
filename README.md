@@ -10,12 +10,18 @@ zkCAP captures commits from private GitHub repositories via webhooks, stores the
 GitHub Push → Webhook → Commit Storage → Attestation → Dashboard
 ```
 
-| Component    | Stack                              | Directory    |
-| ------------ | ---------------------------------- | ------------ |
-| **Frontend** | Next.js, JavaScript, Tailwind CSS  | `frontend/`  |
-| **Backend**  | FastAPI, Python 3.12, SQLAlchemy   | `backend/`   |
-| **Database** | PostgreSQL                         | —            |
-| **Worker**   | Python (placeholder)               | `worker/`    |
+| Component     | Stack                                  | Directory             |
+| ------------  | ----------------------------------     | ------------          |
+| **Frontend**  | Next.js, JavaScript, Tailwind CSS      | `frontend/`           |
+| **Backend**   | FastAPI, Python 3.12, SQLAlchemy       | `backend/`            |
+| **TEE Agent** | TypeScript, Phala Network (Intel SGX)  | `worker/evaluation/`  |
+| **zkTLS**     | TypeScript, Reclaim Protocol           | `worker/zk-tls/`      |
+| **Database**  | PostgreSQL                             | —                     |
+| **On-Chain**  | Rust, Anchor Framework                 | `(Solana)worker/blockchain/` |
+| **Worker**    | Python (placeholder)                   | `worker/`             |
+
+## Pipeline
+GitHub Push → FastAPI Webhook → TEE AI Evaluation (Phala) → zkTLS Proof (Reclaim) → Solana PDA State Update → Next.js Dashboard
 
 ## Repository Structure
 
@@ -49,13 +55,15 @@ zkcap/
 - **PostgreSQL** 15+
 - **pip** (Python package manager)
 - **npm** (Node package manager)
+- **Rust** & **Cargo** (For Solana smart contracts)
+- **Solana CLI** & **Anchor** v0.29.0+
 
 ## Quick Start
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/zkcap.git
+git clone [https://github.com/your-org/zkcap.git](https://github.com/your-org/zkcap.git)
 cd zkcap
 ```
 
@@ -74,7 +82,7 @@ cd backend
 
 # Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scriptsctivate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -99,7 +107,20 @@ curl http://localhost:8000/health
 # → {"status":"ok"}
 ```
 
-### 4. Frontend Setup
+### 4. TEE Worker Setup (TypeScript)
+
+```bash
+cd worker/evaluation
+
+npm install
+
+npm run build
+```
+
+# To run a local simulation of the TEE hardware:
+npm run test:local
+
+### 5. Frontend Setup
 
 ```bash
 cd frontend
@@ -113,7 +134,7 @@ npm run dev
 
 The dashboard will be available at `http://localhost:3000`.
 
-### 5. One-Command Setup (Alternative)
+### 6. One-Command Setup (Alternative)
 
 ```bash
 bash scripts/setup.sh

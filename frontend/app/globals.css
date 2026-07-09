@@ -1,57 +1,126 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Playfair+Display:wght@700&family=EB+Garamond:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #0b0f1a;
-  --foreground: #e4e7ef;
-  --surface: #111827;
-  --surface-hover: #1a2236;
-  --border: #1e293b;
-  --border-hover: #334155;
-  --primary: #6366f1;
-  --primary-hover: #818cf8;
-  --primary-glow: rgba(99, 102, 241, 0.15);
-  --accent-green: #34d399;
-  --accent-amber: #fbbf24;
-  --accent-red: #f87171;
-  --text-muted: #94a3b8;
-  --sidebar-width: 260px;
+  --foreground: #f5f1f0;
+  --background: #0f0d0b;
+  --accent-gold: #b8860b;
+  --accent-amber: #d4a056;
+  --ledger-dark: #1a1815;
+  --ledger-light: #2d2825;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-hover: var(--surface-hover);
-  --color-border: var(--border);
-  --color-border-hover: var(--border-hover);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-glow: var(--primary-glow);
-  --color-accent-green: var(--accent-green);
-  --color-accent-amber: var(--accent-amber);
-  --color-accent-red: var(--accent-red);
-  --color-text-muted: var(--text-muted);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, "Inter", system-ui, -apple-system, sans-serif);
+  background: linear-gradient(135deg, #0f0d0b 0%, #1a1815 50%, #0f0d0b 100%);
+  font-family: 'EB Garamond', 'Courier Prime', monospace;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  min-height: 100vh;
 }
 
-/* Scrollbar */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+code, pre, .font-mono {
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 0.01em;
+}
+
+/* Victorian Ledger Card Styling */
+.ledger-card {
+  border: 2px solid var(--accent-gold);
+  background: linear-gradient(135deg, rgba(15, 13, 11, 0.8), rgba(26, 24, 21, 0.6));
+  backdrop-filter: blur(10px);
+  position: relative;
+}
+
+.ledger-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+}
+
+/* Accent Colors */
+.text-ledger-gold {
+  color: var(--accent-gold);
+}
+
+.text-ledger-amber {
+  color: var(--accent-amber);
+}
+
+/* Monospace for hashes and technical data */
+.font-technical {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.875rem;
+  letter-spacing: 0.025em;
+}
+
+/* Status badge styles */
+.badge-verified {
+  @apply inline-flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-mono uppercase tracking-widest;
+  @apply bg-emerald-900/30 text-emerald-400 border border-emerald-900/50;
+}
+
+.badge-pending {
+  @apply inline-flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-mono uppercase tracking-widest;
+  @apply bg-amber-900/30 text-amber-400 border border-amber-900/50;
+}
+
+.badge-error {
+  @apply inline-flex items-center gap-1 px-3 py-1 rounded-sm text-xs font-mono uppercase tracking-widest;
+  @apply bg-red-900/30 text-red-400 border border-red-900/50;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--ledger-dark);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+  background: var(--accent-gold);
+  border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
+  background: var(--accent-amber);
+}
+
+/* Focus states */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, #0f0d0b 0%, #1a1815 50%, #0f0d0b 100%);
+  }
 }

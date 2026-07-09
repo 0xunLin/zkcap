@@ -1,54 +1,32 @@
-# zkCAP Roadmap
+# zkCAP Execution Roadmap
 
-## Phase 1 — MVP (Current)
+This roadmap defines the 4-phase execution plan for the S.N. Bose Summer Internship. It prioritizes modular development, isolating the blockchain, TEE, and zkTLS layers to maximize engineering efficiency.
 
-> Establish the core platform: capture commits, generate basic attestations, display on a dashboard.
+## Phase 1: Ingestion & Orchestration (The Baseline)
+> Establish the central data flow and user interface.
+- [x] Monorepo architecture setup.
+- [x] FastAPI PostgreSQL database modeling (`Project`, `Commit`, `Attestation`).
+- [ ] GitHub webhook ingestion (`POST /webhooks/github`).
+- [ ] Next.js Dashboard scaffolding (Commit timeline UI).
 
-- [x] Monorepo structure
-- [x] FastAPI backend with health check
-- [x] SQLAlchemy models (Project, Commit, Attestation)
-- [x] Alembic migration setup
-- [x] Next.js frontend with dashboard
-- [ ] GitHub webhook endpoint (`POST /webhooks/github`)
-- [ ] Commit ingestion and storage
-- [ ] Basic attestation generation (hash-based)
-- [ ] Dashboard: display projects, commits, attestation status
-- [ ] Project CRUD API
-- [ ] Authentication (GitHub OAuth)
+## Phase 2: The Execution Vault (Phala TEE & AI)
+> Implement deterministic, zero-trust code evaluation.
+- [x] Engineer the DevSecOps LLM system prompt.
+- [x] Build the TypeScript agent for Phala QuickJS compatibility.
+- [x] Local TEE simulation via Node.js mocking.
+- [ ] Deploy agent to Phala Network Testnet.
+- [ ] Connect TEE hardware signature callback to FastAPI backend.
 
-## Phase 2 — Merkle Trees & Batch Attestations
+## Phase 3: The Data Bridge (zkTLS Protocol)
+> Implement cryptographic proof of data existence without IP leakage.
+- [ ] Integrate Reclaim Protocol / TLSNotary SDK.
+- [ ] Generate zero-knowledge proofs of GitHub commit APIs.
+- [ ] Validate zkTLS proofs on the backend before Solana submission.
 
-> Batch commits into Merkle trees for efficient, verifiable attestation proofs.
-
-- [ ] Merkle tree construction from commit batches
-- [ ] Merkle proof generation per commit
-- [ ] Proof verification endpoint
-- [ ] Batch attestation scheduling (cron or event-driven)
-
-## Phase 3 — Zero-Knowledge Proofs
-
-> Add ZK proofs to enable privacy-preserving attestations.
-
-- [ ] ZK circuit design for commit attestation
-- [ ] Proof generation pipeline
-- [ ] On-chain proof verification
-- [ ] Privacy controls (selective disclosure)
-
-## Phase 4 — Blockchain Anchoring
-
-> Anchor attestation roots on-chain for immutable, trustless verification.
-
-- [ ] Smart contract development (Solidity / Cairo)
-- [ ] On-chain Merkle root storage
-- [ ] Transaction submission pipeline
-- [ ] Block explorer integration
-
-## Phase 5 — AI Evaluation
-
-> AI-powered analysis of commits for quality, security, and compliance signals.
-
-- [ ] LLM-based commit evaluation
-- [ ] Code quality scoring
-- [ ] Security vulnerability detection
-- [ ] Compliance and policy checks
-- [ ] Evaluation metadata in attestations
+## Phase 4: The Trust Anchor (Solana & SBTs)
+> Anchor verified proofs to a decentralized state machine.
+- [ ] Initialize Anchor workspace (`worker/blockchain`).
+- [ ] Write Rust smart contract to derive `Project` and `Milestone` PDAs.
+- [ ] Write verification instructions to require both TEE + zkTLS proofs.
+- [ ] Implement CPIs to mint non-transferable Soulbound Tokens (SBTs) upon success.
+- [ ] Integrate `@solana/web3.js` wallet adapter into the Next.js dashboard.

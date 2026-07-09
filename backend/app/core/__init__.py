@@ -1,1 +1,1 @@
-# Core module
+# core init

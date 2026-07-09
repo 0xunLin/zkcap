@@ -1,53 +1,28 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
-# ──────────────────────────────────────────────
-# zkCAP — Local Development Setup Script
-# ──────────────────────────────────────────────
+echo "Setting up zkCAP..."
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+# Setup Database
+echo "Creating database if not exists..."
+createdb zkcap || true
 
-echo "╔══════════════════════════════════════╗"
-echo "║       zkCAP — Setup Script           ║"
-echo "╚══════════════════════════════════════╝"
-echo ""
-
-# ── Backend ──────────────────────────────────
-echo "→ Setting up backend..."
-cd "$ROOT_DIR/backend"
-
-if [ ! -f ".env" ]; then
-    cp .env.example .env
-    echo "  ✓ Created .env from .env.example"
-else
-    echo "  ○ .env already exists, skipping"
-fi
-
-echo "  → Installing Python dependencies..."
+# Setup Backend
+echo "Setting up backend..."
+cd backend
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-echo "  ✓ Backend dependencies installed"
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
+alembic upgrade head
+cd ..
 
-# ── Frontend ─────────────────────────────────
-echo ""
-echo "→ Setting up frontend..."
-cd "$ROOT_DIR/frontend"
-
-echo "  → Installing Node.js dependencies..."
+# Setup Frontend
+echo "Setting up frontend..."
+cd frontend
 npm install
-echo "  ✓ Frontend dependencies installed"
+cd ..
 
-# ── Done ─────────────────────────────────────
-echo ""
-echo "╔══════════════════════════════════════╗"
-echo "║           Setup Complete!            ║"
-echo "╠══════════════════════════════════════╣"
-echo "║                                      ║"
-echo "║  Start backend:                      ║"
-echo "║    cd backend                        ║"
-echo "║    uvicorn main:app --reload         ║"
-echo "║                                      ║"
-echo "║  Start frontend:                     ║"
-echo "║    cd frontend                       ║"
-echo "║    npm run dev                       ║"
-echo "║                                      ║"
-echo "╚══════════════════════════════════════╝"
+echo "Setup complete! Run 'uvicorn main:app --reload' in backend and 'npm run dev' in frontend."

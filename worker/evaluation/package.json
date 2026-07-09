@@ -1,0 +1,13 @@
+{
+  "name": "evaluation",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test:local": "node dist/test.js"
+  },
+  "author": "",
+  "license": "ISC"
+}

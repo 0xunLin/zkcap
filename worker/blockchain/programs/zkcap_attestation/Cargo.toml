@@ -1,0 +1,26 @@
+[package]
+name = "zkcap_attestation"
+version = "0.1.0"
+description = "zkCAP On-Chain Attestation Program for Solana"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "zkcap_attestation"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+
+[[test]]
+name = "zkcap_attestation"
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"
+solana-program = "~1.18.12"
+spl-token = "~4.0"
+
+[dev-dependencies]
+anchor-client = "0.29.0"
