@@ -1,159 +1,197 @@
-# zkCAP
+<p align="center">
+  <img src="https://img.shields.io/badge/zkCAP-Commit_Attestation-6366f1?style=for-the-badge&labelColor=0b0f1a" alt="zkCAP" />
+</p>
 
-**Verifiable commit attestation protocol for private repositories.**
+<h1 align="center">zkCAP</h1>
 
-zkCAP lets developers attest their commits from private GitHub repos using a simple CLI. It fetches commit metadata, generates SHA-256 attestation hashes, and optionally anchors them on-chain — all without exposing source code.
+<p align="center">
+  <strong>Zero-Knowledge Commit Attestation Protocol</strong><br/>
+  Prove the integrity of your private repository commits — without revealing source code.
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/next.js-14-000000?logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
+</p>
+
+---
+
+## What is zkCAP?
+
+zkCAP enables developers to generate verifiable attestations for commits in private GitHub repositories. Each attestation is a SHA-256 hash derived from the commit's metadata (hash, tree, author, timestamp, parent commits), providing cryptographic proof of commit integrity without exposing any source code.
+
+**Key capabilities:**
+- 🔐 **GitHub OAuth** — Authenticate securely via GitHub
+- 📂 **Repository Linking** — Connect private repos for commit tracking
+- ✅ **Commit Attestation** — Generate SHA-256 attestation hashes from commit metadata
+- ⛓️ **On-Chain Anchoring** — Optionally anchor attestations on-chain for immutability
+- 🖥️ **Browser Terminal** — Interactive CLI-style terminal built into the web dashboard
+
+---
 
 ## Architecture
 
 ```
-Developer Terminal              zkCAP Backend              GitHub API
-┌──────────────┐             ┌──────────────┐          ┌──────────────┐
-│  zkcap CLI   │── REST ────▶│   FastAPI     │          │   GitHub     │
-│  (Node.js)   │◀── JWT ────│   Server      │          │   REST API   │
-└──────────────┘             └──────────────┘          └──────────────┘
-       │                            │                         │
-       │ 1. GitHub Device Flow ──────────────────────────────▶│
-       │ 2. Exchange token ────────▶│                         │
-       │ 3. Fetch commit data ───────────────────────────────▶│
-       │ 4. Send to backend ───────▶│                         │
-       │ 5. Get attestation ◀───────│                         │
+  Browser (Next.js)              Backend (FastAPI)            GitHub API
+┌────────────────────┐       ┌────────────────────┐      ┌──────────────┐
+│  Dashboard UI      │       │  REST API          │      │              │
+│  Terminal UI       │──────▶│  JWT Auth          │      │  OAuth       │
+│  OAuth Popup       │◀──────│  SQLAlchemy ORM    │◀────▶│  Commits     │
+└────────────────────┘       └────────┬───────────┘      │  Repos       │
+                                      │                  └──────────────┘
+                              ┌───────┴───────┐
+                              │  PostgreSQL   │
+                              └───────────────┘
 ```
 
-| Component    | Stack                              | Directory    |
-| ------------ | ---------------------------------- | ------------ |
-| **CLI**      | Node.js, Commander, Chalk, Ora     | `cli/`       |
-| **Backend**  | FastAPI, Python 3.12, SQLAlchemy   | `backend/`   |
-| **Database** | PostgreSQL                         | —            |
-| **Frontend** | Next.js, Tailwind CSS              | `frontend/`  |
-| **Worker**   | Python (placeholder)               | `worker/`    |
+| Component    | Stack                            | Directory    |
+|:-------------|:---------------------------------|:-------------|
+| Frontend     | Next.js 14, Tailwind CSS         | `frontend/`  |
+| Backend      | FastAPI, Python 3.12, SQLAlchemy | `backend/`   |
+| Database     | PostgreSQL 15+                   | —            |
 
-## Repository Structure
+---
 
-```
-zkcap/
-├── cli/                   # CLI tool (primary interface)
-│   ├── bin/zkcap.js       # Entry point
-│   └── src/
-│       ├── commands/      # login, logout, whoami, repo, attest, onchain, status
-│       ├── lib/           # api client, auth storage, github api, config
-│       └── utils/         # logger, spinner
-├── backend/               # FastAPI API server
-│   ├── app/
-│   │   ├── api/           # Route handlers (auth, projects, attestations, webhooks)
-│   │   ├── models/        # SQLAlchemy models (User, Project, Commit, Attestation)
-│   │   ├── schemas/       # Pydantic schemas
-│   │   ├── database/      # DB engine & session
-│   │   └── core/          # Config & auth middleware
-│   ├── alembic/           # Database migrations
-│   └── main.py            # Entry point
-├── frontend/              # Next.js dashboard
-├── worker/                # Background workers (placeholder)
-├── docs/                  # Documentation
-└── scripts/               # Setup & utility scripts
-```
-
-## Quick Start
+## Getting Started
 
 ### Prerequisites
 
 - **Node.js** 18+
 - **Python** 3.12+
 - **PostgreSQL** 15+
-- A **GitHub OAuth App** with Device Flow enabled
+- **GitHub OAuth App** — [Create one here](https://github.com/settings/applications/new)
+  - Homepage URL: `http://localhost:3000`
+  - Callback URL: `http://localhost:3000/api/auth/callback`
 
-### 1. Clone & Setup Backend
+### Backend
 
 ```bash
-git clone https://github.com/your-org/zkcap.git
-cd zkcap/backend
-
+cd backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-cp .env.example .env
-# Edit .env — set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, JWT_SECRET
-
+cp .env.example .env        # Set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, JWT_SECRET
 alembic upgrade head
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. Setup CLI
+### Frontend
 
 ```bash
-cd cli
+cd frontend
 npm install
-npm link    # Makes `zkcap` available globally
+
+# Create .env.local with:
+# NEXT_PUBLIC_API_URL=http://localhost:8000
+# NEXT_PUBLIC_GITHUB_CLIENT_ID=<your-client-id>
+# GITHUB_CLIENT_SECRET=<your-client-secret>
+
+npm run dev
 ```
 
-### 3. Use the CLI
+Open **http://localhost:3000** → Navigate to **Terminal** → Type `zkcap login` to get started.
 
-```bash
-# Authenticate with GitHub
-zkcap login
+---
 
-# Link a repository
-zkcap repo add owner/my-repo
+## Terminal Commands
 
-# Attest a commit
-zkcap attest abc1234def5678
+The web dashboard includes an interactive terminal. All commands use the `zkcap` prefix:
 
-# View attestation status
-zkcap status
+| Command                      | Description                          |
+|:-----------------------------|:-------------------------------------|
+| `zkcap login`                | Authenticate with GitHub             |
+| `zkcap logout`               | Clear session                        |
+| `zkcap whoami`               | Display current user                 |
+| `zkcap repo add <owner/repo>`| Link a GitHub repository            |
+| `zkcap repo list`            | List linked repositories             |
+| `zkcap attest <hash>`        | Generate attestation for a commit    |
+| `zkcap onchain <hash>`       | Anchor attestation on-chain          |
+| `zkcap status`               | View all attestation statuses        |
 
-# Anchor on-chain (optional)
-zkcap onchain abc1234def5678
+---
+
+## Project Structure
+
+```
+zkcap/
+├── frontend/                   # Next.js web application
+│   ├── app/
+│   │   ├── components/         # Terminal, Sidebar, TerminalOutput
+│   │   ├── lib/                # API client, command engine, parsers
+│   │   ├── terminal/           # Terminal page
+│   │   ├── projects/           # Projects management page
+│   │   ├── attestations/       # Attestations dashboard
+│   │   ├── commits/            # Commits explorer
+│   │   └── api/auth/callback/  # GitHub OAuth callback route
+│   └── ...
+├── backend/                    # FastAPI REST API
+│   ├── app/
+│   │   ├── api/                # Route handlers
+│   │   ├── models/             # SQLAlchemy models
+│   │   ├── schemas/            # Pydantic schemas
+│   │   ├── core/               # Auth middleware, config
+│   │   └── database/           # DB engine & session
+│   ├── alembic/                # Database migrations
+│   └── main.py
+├── docs/                       # Documentation
+└── scripts/                    # Utility scripts
 ```
 
-## CLI Commands
+---
 
-| Command | Description |
-| ------- | ----------- |
-| `zkcap login` | Authenticate with GitHub (Device Flow) |
-| `zkcap logout` | Clear stored credentials |
-| `zkcap whoami` | Show current authenticated user |
-| `zkcap repo add <owner/repo>` | Link a GitHub repository |
-| `zkcap repo list` | List linked repositories |
-| `zkcap attest <hash>` | Create a verifiable attestation for a commit |
-| `zkcap onchain <hash>` | Anchor an attestation on-chain (optional) |
-| `zkcap status` | View attestation statuses |
+## API
 
-See [docs/cli.md](docs/cli.md) for detailed usage and examples.
+Interactive API documentation is available when the backend is running:
 
-## Database Models
+| Format     | URL                             |
+|:-----------|:--------------------------------|
+| Swagger UI | `http://localhost:8000/docs`     |
+| ReDoc      | `http://localhost:8000/redoc`    |
 
-| Model           | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `User`          | GitHub-authenticated user                        |
-| `Project`       | GitHub repository linked by a user               |
-| `Commit`        | Commit with full metadata (hash, tree, parents)  |
-| `Attestation`   | SHA-256 attestation linked to a commit           |
+### Key Endpoints
 
-## API Documentation
+| Method | Endpoint                          | Auth | Description                  |
+|:-------|:----------------------------------|:-----|:-----------------------------|
+| POST   | `/api/auth/github`                | —    | Exchange GitHub token for JWT |
+| GET    | `/api/auth/me`                    | JWT  | Current user info            |
+| POST   | `/api/projects`                   | JWT  | Link a repository            |
+| GET    | `/api/projects`                   | JWT  | List linked repositories     |
+| POST   | `/api/attestations`               | JWT  | Create an attestation        |
+| GET    | `/api/attestations`               | JWT  | List attestations            |
+| POST   | `/api/attestations/{id}/onchain`  | JWT  | Submit attestation on-chain  |
 
-Once the backend is running, interactive API docs are available at:
+---
 
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+## Data Models
 
-See [docs/api.md](docs/api.md) for endpoint documentation.
+| Model         | Purpose                                                    |
+|:--------------|:-----------------------------------------------------------|
+| `User`        | GitHub-authenticated user with hashed access token         |
+| `Project`     | Linked GitHub repository scoped to a user                  |
+| `Commit`      | Full commit metadata — SHA, tree, parents, author, stats   |
+| `Attestation` | SHA-256 attestation hash with status tracking              |
 
-## Documentation
+**Attestation hash computation:**
 
-- [CLI Guide](docs/cli.md) — CLI commands, setup, and how it works
-- [Architecture](docs/architecture.md) — System design and data flow
-- [Roadmap](docs/roadmap.md) — Feature phases and milestones
-- [API Reference](docs/api.md) — Endpoint documentation
+```
+SHA-256( commit_hash | tree_hash | author | timestamp | sorted(parent_hashes) )
+```
 
-## Roadmap
+---
 
-- **Phase 1 (MVP)** ✅: CLI interface, GitHub OAuth, commit attestation, basic API
-- **Phase 2**: Merkle tree batch attestations
-- **Phase 3**: Zero-knowledge proofs
-- **Phase 4**: Blockchain anchoring (replace on-chain placeholder)
-- **Phase 5**: AI-powered commit evaluation
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'feat: add your feature'`)
+4. Push to the branch (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+---
 
 ## License
 
-Private — All rights reserved.
+This project is proprietary. All rights reserved.
