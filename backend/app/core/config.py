@@ -29,6 +29,15 @@ class Settings(BaseSettings):
     RECLAIM_API_KEY: str = os.getenv("RECLAIM_API_KEY", "")
     ENABLE_ZKTLS_PROOFS: bool = os.getenv("ENABLE_ZKTLS_PROOFS", "False").lower() == "true"
 
+    # GitHub OAuth (Device Flow)
+    GITHUB_CLIENT_ID: str = ""
+    GITHUB_CLIENT_SECRET: str = ""
+
+    # JWT Authentication
+    JWT_SECRET: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRY_HOURS: int = 72
+
     class Config:
         env_file = ".env"
 

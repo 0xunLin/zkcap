@@ -2,143 +2,133 @@
 
 **Verifiable commit attestation protocol for private repositories.**
 
-zkCAP captures commits from private GitHub repositories via webhooks, stores them securely, generates verifiable attestations, and presents everything through a clean dashboard.
+zkCAP lets developers attest their commits from private GitHub repos using a simple CLI. It fetches commit metadata, generates SHA-256 attestation hashes, and optionally anchors them on-chain — all without exposing source code.
 
 ## Architecture
 
 ```
-GitHub Push → Webhook → Commit Storage → Attestation → Dashboard
+Developer Terminal              zkCAP Backend              GitHub API
+┌──────────────┐             ┌──────────────┐          ┌──────────────┐
+│  zkcap CLI   │── REST ────▶│   FastAPI     │          │   GitHub     │
+│  (Node.js)   │◀── JWT ────│   Server      │          │   REST API   │
+└──────────────┘             └──────────────┘          └──────────────┘
+       │                            │                         │
+       │ 1. GitHub Device Flow ──────────────────────────────▶│
+       │ 2. Exchange token ────────▶│                         │
+       │ 3. Fetch commit data ───────────────────────────────▶│
+       │ 4. Send to backend ───────▶│                         │
+       │ 5. Get attestation ◀───────│                         │
 ```
 
-| Component     | Stack                                  | Directory             |
-| ------------  | ----------------------------------     | ------------          |
-| **Frontend**  | Next.js, JavaScript, Tailwind CSS      | `frontend/`           |
-| **Backend**   | FastAPI, Python 3.12, SQLAlchemy       | `backend/`            |
-| **TEE Agent** | TypeScript, Phala Network (Intel SGX)  | `worker/evaluation/`  |
-| **zkTLS**     | TypeScript, Reclaim Protocol           | `worker/zk-tls/`      |
-| **Database**  | PostgreSQL                             | —                     |
-| **On-Chain**  | Rust, Anchor Framework                 | `(Solana)worker/blockchain/` |
-| **Worker**    | Python (placeholder)                   | `worker/`             |
-
-## Pipeline
-GitHub Push → FastAPI Webhook → TEE AI Evaluation (Phala) → zkTLS Proof (Reclaim) → Solana PDA State Update → Next.js Dashboard
+| Component    | Stack                              | Directory    |
+| ------------ | ---------------------------------- | ------------ |
+| **CLI**      | Node.js, Commander, Chalk, Ora     | `cli/`       |
+| **Backend**  | FastAPI, Python 3.12, SQLAlchemy   | `backend/`   |
+| **Database** | PostgreSQL                         | —            |
+| **Frontend** | Next.js, Tailwind CSS              | `frontend/`  |
+| **Worker**   | Python (placeholder)               | `worker/`    |
 
 ## Repository Structure
 
 ```
 zkcap/
-├── frontend/          # Next.js dashboard
-├── backend/           # FastAPI API server
+├── cli/                   # CLI tool (primary interface)
+│   ├── bin/zkcap.js       # Entry point
+│   └── src/
+│       ├── commands/      # login, logout, whoami, repo, attest, onchain, status
+│       ├── lib/           # api client, auth storage, github api, config
+│       └── utils/         # logger, spinner
+├── backend/               # FastAPI API server
 │   ├── app/
-│   │   ├── api/       # Route handlers
-│   │   ├── models/    # SQLAlchemy models
-│   │   ├── schemas/   # Pydantic schemas
-│   │   ├── services/  # Business logic
-│   │   ├── database/  # DB engine & session
-│   │   └── core/      # Config & settings
-│   ├── alembic/       # Database migrations
-│   └── main.py        # Entry point
-├── worker/            # Background workers (placeholder)
-│   ├── evaluation/
-│   ├── merkle/
-│   └── blockchain/
-├── docs/              # Documentation
-├── scripts/           # Setup & utility scripts
-├── README.md
-└── .gitignore
+│   │   ├── api/           # Route handlers (auth, projects, attestations, webhooks)
+│   │   ├── models/        # SQLAlchemy models (User, Project, Commit, Attestation)
+│   │   ├── schemas/       # Pydantic schemas
+│   │   ├── database/      # DB engine & session
+│   │   └── core/          # Config & auth middleware
+│   ├── alembic/           # Database migrations
+│   └── main.py            # Entry point
+├── frontend/              # Next.js dashboard
+├── worker/                # Background workers (placeholder)
+├── docs/                  # Documentation
+└── scripts/               # Setup & utility scripts
 ```
-
-## Prerequisites
-
-- **Python** 3.12+
-- **Node.js** 20+
-- **PostgreSQL** 15+
-- **pip** (Python package manager)
-- **npm** (Node package manager)
-- **Rust** & **Cargo** (For Solana smart contracts)
-- **Solana CLI** & **Anchor** v0.29.0+
 
 ## Quick Start
 
-### 1. Clone the repository
+### Prerequisites
+
+- **Node.js** 18+
+- **Python** 3.12+
+- **PostgreSQL** 15+
+- A **GitHub OAuth App** with Device Flow enabled
+
+### 1. Clone & Setup Backend
 
 ```bash
-git clone [https://github.com/your-org/zkcap.git](https://github.com/your-org/zkcap.git)
-cd zkcap
-```
+git clone https://github.com/your-org/zkcap.git
+cd zkcap/backend
 
-### 2. Database Setup
-
-Create a PostgreSQL database:
-
-```sql
-CREATE DATABASE zkcap;
-```
-
-### 3. Backend Setup
-
-```bash
-cd backend
-
-# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scriptsctivate
-
-# Install dependencies
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Configure environment
 cp .env.example .env
-# Edit .env with your DATABASE_URL if needed
+# Edit .env — set GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET, JWT_SECRET
 
-# Run database migrations
 alembic upgrade head
-
-# Start the server
 uvicorn main:app --reload --port 8000
 ```
 
-The API will be available at `http://localhost:8000`.
-
-Verify with:
+### 2. Setup CLI
 
 ```bash
-curl http://localhost:8000/health
-# → {"status":"ok"}
-```
-
-### 4. TEE Worker Setup (TypeScript)
-
-```bash
-cd worker/evaluation
-
+cd cli
 npm install
-
-npm run build
+npm link    # Makes `zkcap` available globally
 ```
 
-# To run a local simulation of the TEE hardware:
-npm run test:local
-
-### 5. Frontend Setup
+### 3. Use the CLI
 
 ```bash
-cd frontend
+# Authenticate with GitHub
+zkcap login
 
-# Install dependencies
-npm install
+# Link a repository
+zkcap repo add owner/my-repo
 
-# Start the dev server
-npm run dev
+# Attest a commit
+zkcap attest abc1234def5678
+
+# View attestation status
+zkcap status
+
+# Anchor on-chain (optional)
+zkcap onchain abc1234def5678
 ```
 
-The dashboard will be available at `http://localhost:3000`.
+## CLI Commands
 
-### 6. One-Command Setup (Alternative)
+| Command | Description |
+| ------- | ----------- |
+| `zkcap login` | Authenticate with GitHub (Device Flow) |
+| `zkcap logout` | Clear stored credentials |
+| `zkcap whoami` | Show current authenticated user |
+| `zkcap repo add <owner/repo>` | Link a GitHub repository |
+| `zkcap repo list` | List linked repositories |
+| `zkcap attest <hash>` | Create a verifiable attestation for a commit |
+| `zkcap onchain <hash>` | Anchor an attestation on-chain (optional) |
+| `zkcap status` | View attestation statuses |
 
-```bash
-bash scripts/setup.sh
-```
+See [docs/cli.md](docs/cli.md) for detailed usage and examples.
+
+## Database Models
+
+| Model           | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `User`          | GitHub-authenticated user                        |
+| `Project`       | GitHub repository linked by a user               |
+| `Commit`        | Commit with full metadata (hash, tree, parents)  |
+| `Attestation`   | SHA-256 attestation linked to a commit           |
 
 ## API Documentation
 
@@ -149,26 +139,19 @@ Once the backend is running, interactive API docs are available at:
 
 See [docs/api.md](docs/api.md) for endpoint documentation.
 
-## Database Models
-
-| Model           | Description                                  |
-| --------------- | -------------------------------------------- |
-| `Project`       | GitHub repository being tracked              |
-| `Commit`        | Individual commit captured via webhook       |
-| `Attestation`   | Verifiable attestation linked to a commit    |
-
 ## Documentation
 
+- [CLI Guide](docs/cli.md) — CLI commands, setup, and how it works
 - [Architecture](docs/architecture.md) — System design and data flow
 - [Roadmap](docs/roadmap.md) — Feature phases and milestones
 - [API Reference](docs/api.md) — Endpoint documentation
 
 ## Roadmap
 
-- **Phase 1 (MVP)**: Webhook ingestion, commit storage, basic attestations, dashboard
+- **Phase 1 (MVP)** ✅: CLI interface, GitHub OAuth, commit attestation, basic API
 - **Phase 2**: Merkle tree batch attestations
 - **Phase 3**: Zero-knowledge proofs
-- **Phase 4**: Blockchain anchoring
+- **Phase 4**: Blockchain anchoring (replace on-chain placeholder)
 - **Phase 5**: AI-powered commit evaluation
 
 ## License

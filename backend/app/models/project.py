@@ -1,15 +1,39 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from app.database.base_class import Base
+import uuid
+from datetime import datetime, timezone
+
+from sqlalchemy import String, DateTime, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.database.session import Base
+
 
 class Project(Base):
+    """A project linked to a GitHub repository."""
+
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    repository_url = Column(String, unique=True, index=True, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    github_repo: Mapped[str] = mapped_column(String(500), nullable=False, unique=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
 
-    commits = relationship("Commit", back_populates="project", cascade="all, delete-orphan")
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="projects")
+    commits: Mapped[list["Commit"]] = relationship(
+        "Commit", back_populates="project", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Project {self.name}>"

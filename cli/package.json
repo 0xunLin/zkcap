@@ -1,0 +1,24 @@
+{
+  "name": "zkcap-cli",
+  "version": "0.1.0",
+  "description": "CLI for zkCAP — Verifiable commit attestation protocol",
+  "type": "module",
+  "bin": {
+    "zkcap": "./bin/zkcap.js"
+  },
+  "scripts": {
+    "start": "node bin/zkcap.js",
+    "link": "npm link"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "open": "^10.1.2",
+    "ora": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["zkcap", "attestation", "git", "cli"],
+  "license": "UNLICENSED"
+}
