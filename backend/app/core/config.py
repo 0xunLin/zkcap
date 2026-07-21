@@ -2,13 +2,20 @@ import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    app_name: str = "zkCAP"
+    app_env: str = "development"
     # Project
     PROJECT_NAME: str = "zkCAP API"
-    API_V1_STR: str = "/api/v1"
+    API_V1_STR: str = "/api"
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
     
+    model_config = {
+        "env_file": ".env",
+        "extra": "ignore" # <--- This prevents future crashes from unknown .env variables
+    }
+
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/zkcap")
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql+psycopg://postgres:postgres@localhost:5432/zkcap")
     
     # GitHub Webhook
     GITHUB_WEBHOOK_SECRET: str = os.getenv("GITHUB_WEBHOOK_SECRET", "super_secret_webhook_key")
@@ -38,7 +45,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_HOURS: int = 72
 
-    class Config:
-        env_file = ".env"
+from functools import lru_cache
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+settings = get_settings()

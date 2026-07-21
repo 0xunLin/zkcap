@@ -13,7 +13,7 @@ def read_attestations(skip: int = 0, limit: int = 100, db: Session = Depends(get
     return attestations
 
 @router.get("/{attestation_id}", response_model=Attestation)
-def read_attestation(attestation_id: int, db: Session = Depends(get_db)):
+def read_attestation(attestation_id: str, db: Session = Depends(get_db)):
     db_attestation = attestation_service.get_attestation(db, attestation_id=attestation_id)
     if db_attestation is None:
         raise HTTPException(status_code=404, detail="Attestation not found")

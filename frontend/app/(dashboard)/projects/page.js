@@ -76,19 +76,21 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Page Header */}
-      <div className="mb-8 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 id="page-title" className="text-2xl font-bold tracking-tight">Projects</h1>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">
-            Manage your linked GitHub repositories
+          <h1 id="page-title" className="text-3xl font-black tracking-tight flex items-center gap-2">
+            Projects <span className="text-orange-500">.</span>
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            Manage linked GitHub repositories & zero-trust attestation targets
           </p>
         </div>
         {isLoggedIn && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="px-4 py-2.5 bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-sm font-medium rounded-lg transition-colors duration-200 flex items-center gap-2"
+            className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-all shadow-md shadow-orange-500/20 flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -100,39 +102,39 @@ export default function ProjectsPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-900/20 border border-red-900/50 rounded-lg text-red-400 text-sm">
-          {error}
-          <button onClick={() => setError(null)} className="ml-2 text-red-300 hover:text-white">✕</button>
+        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-sm flex items-center justify-between backdrop-blur-md">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-rose-300 hover:text-white">✕</button>
         </div>
       )}
 
       {/* Add Repo Form */}
       {showAddForm && (
-        <div className="mb-6 bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl">
           <form onSubmit={handleAddRepo} className="flex items-end gap-4">
             <div className="flex-1">
-              <label className="block text-xs font-medium text-[var(--text-muted)] mb-2 uppercase tracking-wider">
-                Repository
+              <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">
+                Repository Slug
               </label>
               <input
                 type="text"
                 value={repoSlug}
                 onChange={(e) => setRepoSlug(e.target.value)}
                 placeholder="owner/repository"
-                className="w-full bg-[var(--background)] border border-[var(--border)] rounded-lg px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]/30 transition-colors font-mono"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/30 transition-all font-mono"
               />
             </div>
             <button
               type="submit"
               disabled={adding || !repoSlug.includes("/")}
-              className="px-6 py-2.5 bg-[var(--accent-green)] hover:bg-emerald-500 text-black text-sm font-semibold rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-black text-sm font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-emerald-500/20"
             >
-              {adding ? "Linking..." : "Link"}
+              {adding ? "Linking..." : "Link Project"}
             </button>
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="px-4 py-2.5 text-sm text-[var(--text-muted)] hover:text-[var(--foreground)] transition-colors"
+              className="px-4 py-3 text-sm text-gray-400 hover:text-white transition-colors"
             >
               Cancel
             </button>
@@ -142,49 +144,51 @@ export default function ProjectsPage() {
 
       {/* Not logged in */}
       {!isLoggedIn && !loading && (
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-12 text-center">
-          <p className="text-sm text-[var(--text-muted)] mb-2">Not logged in</p>
-          <p className="text-xs text-[var(--text-muted)] opacity-60">
-            Go to <Link href="/terminal" className="text-[var(--accent-amber)] hover:underline">Terminal</Link> and run <code className="text-[var(--accent-amber)]">zkcap login</code>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center backdrop-blur-xl">
+          <p className="text-base text-gray-300 font-medium mb-2">Not Logged In</p>
+          <p className="text-xs text-gray-400">
+            Navigate to the <Link href="/terminal" className="text-orange-400 hover:underline font-mono">Terminal</Link> and run <code className="text-orange-400 bg-black/40 px-2 py-1 rounded border border-white/10">zkcap login</code>
           </p>
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="text-center py-12 text-[var(--text-muted)]">Loading...</div>
+        <div className="text-center py-16 text-gray-400 font-mono animate-pulse">Loading projects...</div>
       )}
 
-      {/* Projects List */}
+      {/* Projects List Empty */}
       {!loading && isLoggedIn && projects.length === 0 && (
-        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-12">
-          <div className="flex flex-col items-center text-center text-[var(--text-muted)]">
-            <svg className="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.75}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-            </svg>
-            <p className="text-sm font-medium">No projects linked yet</p>
-            <p className="text-xs mt-1 opacity-60">Click "Add Repository" above or use the terminal</p>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-16 text-center backdrop-blur-xl">
+          <div className="flex flex-col items-center text-center text-gray-400">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4 text-orange-400">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+              </svg>
+            </div>
+            <p className="text-base font-semibold text-white">No Projects Linked</p>
+            <p className="text-xs mt-1 text-gray-400">Click "Add Repository" above or connect via zkCAP CLI</p>
           </div>
         </div>
       )}
 
       {!loading && projects.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-5 hover:border-[var(--border-hover)] transition-colors"
+              className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl hover:border-orange-500/40 transition-all duration-300 group shadow-lg"
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold text-[var(--foreground)]">
+                  <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors">
                     {project.github_repo}
                   </h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 font-mono">
+                  <p className="text-xs text-gray-400 mt-1 font-mono">
                     ID: {project.id}
                   </p>
                 </div>
-                <span className="px-2 py-1 bg-[var(--primary)]/10 text-[var(--primary)] text-xs rounded font-mono">
+                <span className="px-3 py-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 text-xs rounded-full font-mono font-medium">
                   {project.commit_count || 0} commits
                 </span>
               </div>

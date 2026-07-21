@@ -11,7 +11,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-def get_attestation(db: Session, attestation_id: int):
+def get_attestation(db: Session, attestation_id: str):
     return db.query(Attestation).filter(Attestation.id == attestation_id).first()
 
 
@@ -19,14 +19,14 @@ def get_attestations(db: Session, skip: int = 0, limit: int = 100):
     return db.query(Attestation).order_by(Attestation.created_at.desc()).offset(skip).limit(limit).all()
 
 
-def get_attestation_by_commit_id(db: Session, commit_id: int):
+def get_attestation_by_commit_id(db: Session, commit_id: str):
     return db.query(Attestation).filter(Attestation.commit_id == commit_id).first()
 
 
 async def invoke_tee_evaluation(
     db: Session,
-    attestation_id: int,
-    commit_id: int,
+    attestation_id: str,
+    commit_id: str,
     commit_hash: str,
     commit_author: str,
     repository_url: str,
@@ -72,7 +72,7 @@ async def invoke_tee_evaluation(
 
 def generate_attestation_for_commit(
     db: Session,
-    commit_id: int,
+    commit_id: str,
     commit_hash: str,
     commit_author: str,
     repository_url: str,

@@ -13,7 +13,7 @@ def read_commits(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     return commits
 
 @router.get("/{commit_id}", response_model=Commit)
-def read_commit(commit_id: int, db: Session = Depends(get_db)):
+def read_commit(commit_id: str, db: Session = Depends(get_db)):
     db_commit = commit_service.get_commit(db, commit_id=commit_id)
     if db_commit is None:
         raise HTTPException(status_code=404, detail="Commit not found")

@@ -1,0 +1,30 @@
+{
+  "name": "zkcap-midnight-worker",
+  "version": "1.0.0",
+  "description": "Midnight integration for zkCAP commit attestation protocol",
+  "main": "dist/prover.js",
+  "type": "module",
+  "scripts": {
+    "build": "compact compile src/zkcap.compact dist/",
+    "start": "ts-node src/prover.ts"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/compact-js": "^2.5.1",
+    "@midnight-ntwrk/compact-runtime": "^0.16.0",
+    "@midnight-ntwrk/midnight-js-contracts": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-network-id": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.1.1",
+    "@midnight-ntwrk/midnight-js-types": "^4.1.1",
+    "@midnight-ntwrk/wallet-sdk-abstractions": "^2.1.0",
+    "@midnight-ntwrk/wallet-sdk-node-client": "^1.1.2",
+    "@midnight-ntwrk/wallet-sdk-unshielded-wallet": "^3.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

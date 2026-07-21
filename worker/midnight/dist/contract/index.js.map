@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../",
+  "sources": ["src/zkcap.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAAA;;;;;;;;;;;;;MA0BA,AAAA,gBAEC;;;;;cAF+B,YAAqB;;;;;;;;;;;;;;;;;;yCAArB,YAAqB;;;;;;;;;kDAArB,YAAqB;;;OAEpD;MAGD,AAAA,6BA8BC;;;;;cA7BG,YAAqB;cACrB,kBAA2B;cAC3B,gBAAwB;cACxB,WAAmB;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;yCAHnB,YAAqB,+BACrB,kBAA2B,+BAC3B,gBAAwB,+BACxB,WAAmB;;;;;;;;;+DAHnB,YAAqB;+DACrB,kBAA2B;+DAC3B,gBAAwB;+DACxB,WAAmB;;;OA0BtB;;;;;;;;;;GACA;EA9DD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAmBA;;;;;;;;;;yEAA2D;IAC3D;;;;;;;;;;yEAAmE;;;;;;;GA0ClE;EC9DD,AAAA,kBAAA;oEAAA;;;EDuBA,AAAA,0BAAqD;;0DAArD,uBAAqD;;;;;;;;;;;;;;GAAA;EAGrD,AAAA,mBAEC,4BAF+B,YAAqB;IACjD;;;;;;;;;;2HAAoC,YAAU;;;;;;wEAA3B;;GACtB;EAGD,AAAA,gCA8BC;;mCA7BG,YAAqB;mCACrB,kBAA2B;mCAC3B,gBAAwB;mCACxB,WAAmB;;oDAGZ;;;;;;;;;;;2KAAoC,YAAU;;;;yHAA3B;;UAGpB,cAAwC;;0CAGvC,cAAY;0CAAkB,YAAU;;UAIzC,iBAAqE,0BAAzB,cAAY;0CACvD,iBAAe,EAAI,kBAAgB;;UAI1C,KAAmB,iBAGU,YAAU;oCACN,gBAAc;+BACnB,WAAS;IALrC;;;;;;;;;;2HACa,kBAAgB;;;2HAD7B,KAAmB;;;wEAAA;;GAQtB;;;;;;;;;;;;;;;;;;;;;;;;IA1CD;;;;;uCAAA;;;;;;;;;;;;;;;;4GAA2D;;;;;;uCAA3D;;;;;;;;;;;;4GAA2D;;;;;;;;;;;;;;uCAA3D;;;;;;;;;;;;;;;4GAA2D;;;;;;;;;;;;;;uCAA3D;;;;;;;;;;;;;;;;;4GAA2D;;;;;;;;;KAAA;IAC3D;;;;;uCAAA;;;;;;;;;;;;;;;;4GAAmE;;;;;;uCAAnE;;;;;;;;;;;;4GAAmE;;;;;;;;;;;;;;uCAAnE;;;;;;;;;;;;;;;4GAAmE;;;;;;;;;;;;;;uCAAnE;;;;;;;;;;;;;;;;;4GAAmE;;;;;;;;;KAAA;;;;;;;;;;;;"
+}

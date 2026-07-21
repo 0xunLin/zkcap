@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app.models.commit import Commit
 from app.schemas.commit import CommitCreate
 
-def get_commit(db: Session, commit_id: int):
+def get_commit(db: Session, commit_id: str):
     return db.query(Commit).filter(Commit.id == commit_id).first()
 
 def get_commit_by_hash(db: Session, commit_hash: str):

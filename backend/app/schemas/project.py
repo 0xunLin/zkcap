@@ -1,18 +1,19 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from pydantic import BaseModel
 
-class ProjectBase(BaseModel):
+class ProjectCreate(BaseModel):
+    github_repo: str
+
+class Project(BaseModel):
+    id: str
     name: str
-    repository_url: str
-
-class ProjectCreate(ProjectBase):
-    pass
-
-class Project(ProjectBase):
-    id: int
+    github_repo: str
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    commit_count: int = 0
 
     class Config:
         from_attributes = True
+    
+# --- Aliases to satisfy duplicate routers ---
+ProjectCreateRequest = ProjectCreate
+ProjectResponse = Project

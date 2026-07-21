@@ -7,13 +7,13 @@ class CommitBase(BaseModel):
     author: str
     message: str
     timestamp: str
-    project_id: int
+    project_id: str
 
 class CommitCreate(CommitBase):
     pass
 
 class Commit(CommitBase):
-    id: int
+    id: str
     zkTLS_proof: Optional[Dict[str, Any]] = None
     created_at: datetime
     updated_at: datetime

@@ -28,6 +28,6 @@ All endpoints are prefixed with `/api/v1` except for the `/health` check.
 ## Attestation Endpoints
 
 - `GET /api/v1/attestations/` - List all generated attestations.
-- `GET /api/v1/attestations/{commit_id}` - Fetch the combined zkTLS proof and TEE hardware signature for a specific commit, alongside its Solana PDA address.
+- `GET /api/v1/attestations/{commit_id}` - Fetch the combined Midnight ZK proof and TEE hardware signature for a specific commit, alongside its Midnight ledger transaction ID.
 
 Refer to `http://localhost:8000/docs` for interactive Swagger documentation and strict Pydantic schema details once the server is running.

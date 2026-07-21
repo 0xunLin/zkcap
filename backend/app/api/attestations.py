@@ -10,7 +10,7 @@ import hashlib
 import json
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from app.database.session import get_db
@@ -19,6 +19,9 @@ from app.models.project import Project
 from app.models.commit import Commit
 from app.models.attestation import Attestation, AttestationStatus
 from app.core.auth import get_current_user
+from app.services.midnight_client import get_midnight_client
+
+
 from app.schemas.attestation import (
     AttestationCreateRequest,
     AttestationResponse,
@@ -27,6 +30,9 @@ from app.schemas.attestation import (
 
 router = APIRouter(prefix="/api/attestations", tags=["attestations"])
 
+def to_bytes32_hex(val: str) -> str:
+    """Helper to convert UUIDs/Strings to 32-byte hex for Midnight Compact"""
+    return hashlib.sha256(val.encode('utf-8')).hexdigest()
 
 def _compute_attestation_hash(commit_data: AttestationCreateRequest) -> str:
     """
@@ -177,14 +183,13 @@ async def list_attestations(
 @router.post("/{attestation_id}/onchain", response_model=OnchainResponse)
 async def submit_onchain(
     attestation_id: str,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Mark an attestation for on-chain anchoring.
-
-    This is a placeholder for Phase 4. Currently it updates the status
-    to ONCHAIN and generates a mock transaction hash.
+    Triggers Midnight ZK Prover in the background.
     """
     attestation = db.query(Attestation).filter(
         Attestation.id == uuid.UUID(attestation_id),
@@ -211,16 +216,28 @@ async def submit_onchain(
             detail="Attestation is already on-chain",
         )
 
-    # Placeholder: generate a mock tx hash from the attestation hash
-    # In Phase 4 this would submit to an actual blockchain
-    mock_tx = "0x" + hashlib.sha256(
-        (attestation.attestation_hash or "").encode()
-    ).hexdigest()[:40]
-
-    attestation.status = AttestationStatus.ONCHAIN
-    attestation.onchain_tx = mock_tx
+    attestation.status = AttestationStatus.PENDING # Or leave as generated/processing
     db.commit()
     db.refresh(attestation)
+
+    # Prepare 32-byte arguments
+    project_id_hex = to_bytes32_hex(str(project.id))
+    repository_id_hex = to_bytes32_hex(project.github_repo)
+    author_signature_hex = to_bytes32_hex(commit.author)
+    
+    # Spawn the heavy ZK Prover in the background
+    background_tasks.add_task(
+        get_midnight_client().anchor_attestation,
+        db,
+        str(attestation.id),
+        project_id_hex,
+        attestation.attestation_hash,
+        100, # default security score
+        int(commit.timestamp.timestamp()),
+        repository_id_hex,
+        commit.commit_hash,
+        author_signature_hex
+    )
 
     return OnchainResponse(
         attestation_id=str(attestation.id),

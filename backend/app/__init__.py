@@ -13,7 +13,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
 
     app = FastAPI(
-        title=settings.APP_NAME,
+        title="zkCAP",
         description="Verifiable commit attestation protocol for private repositories.",
         version="0.1.0",
     )

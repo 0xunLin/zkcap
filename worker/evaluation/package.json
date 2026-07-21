@@ -9,5 +9,8 @@
     "test:local": "node dist/test.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^26.1.1"
+  }
 }

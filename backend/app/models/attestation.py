@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.session import Base
+from app.database.base_class import Base
 
 
 class AttestationStatus(str, enum.Enum):

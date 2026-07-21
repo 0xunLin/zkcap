@@ -5,8 +5,7 @@
 zkCAP is a complete, production-ready system for verifying private code commits using cryptographic attestations. The system orchestrates three advanced cryptographic primitives:
 
 1. **Phala Network TEE** (Trusted Execution Environment) - Evaluates code in Intel SGX hardware
-2. **Reclaim Protocol / zkTLS** - Proves GitHub commit existence without revealing auth tokens
-3. **Solana Blockchain** - Anchors verified attestations and mints Soulbound Tokens
+2. **Midnight Network & Compact Smart Contract** - Generates client-side zero-knowledge proofs of commit data existence and anchors them on-chain to the public ledger state.
 
 ## Complete Data Flow
 
@@ -18,7 +17,7 @@ GitHub Push Event
     • Creates Project (if new repository)
     • Stores Commit record
     • Queues async TEE evaluation
-    • Queues async zkTLS proof generation
+    • Queues async Midnight Compact ZK proof generation
     ↓
 [2] Async TEE Invocation (background)
     • POST → Phala TEE endpoint
@@ -26,10 +25,10 @@ GitHub Push Event
     • TEE returns: invocation_id
     • Update attestation.tee_invocation_id
     ↓
-[3] Async zkTLS Proof Generation (background)
-    • Invoke Reclaim Protocol
-    • Generate zero-knowledge proof of commit
-    • Store proof in commit.zkTLS_proof
+[3] Async Midnight ZK Proof Generation (background)
+    • Invoke Midnight Compact client-side prover (local worker environment)
+    • Generate zero-knowledge proof of commit metadata validity
+    • Store generated proof in commit.midnight_proof
     ↓
 [4] Phala TEE Evaluates Commit
     • Runs DevSecOps LLM via Groq API
@@ -42,21 +41,18 @@ GitHub Push Event
     • Update attestation.tee_evaluation
     • Update attestation.tee_execution (hardware signature)
     • Set status: tee_evaluated
-    • Trigger Solana recording
+    • Trigger Midnight recording
     ↓
-[6] Solana Recording (if enabled)
-    • Create ProjectAccount PDA (if new)
-    • Create AttestationAccount PDA
-    • Record security_score + TEE signature + zkTLS proof
-    • Emit AttestationRecorded event
-    • (Optionally) mint SBT to developer wallet
+[6] Midnight Recording (if enabled)
+    • Verify ZK proof on the Midnight ledger
+    • Update public ledger state for Project and Commit attestation hash
+    • Emit AttestationAnchored event on-chain
     ↓
 [7] Frontend Displays Attestation
     • Fetch /api/v1/attestations/
     • Show TEE security score
-    • Show Solana transaction signature
-    • Link to Solana Explorer
-    • Display SBT status if minted
+    • Show Midnight transaction ID
+    • Link to Midnight Block Explorer
 ```
 
 ## Architecture
@@ -65,8 +61,8 @@ GitHub Push Event
 
 **Database Models:**
 - `Project`: GitHub repository being tracked
-- `Commit`: Individual commit with optional zkTLS proof
-- `Attestation`: Evaluation result with TEE score, Solana tx, SBT mint
+- `Commit`: Individual commit with optional Midnight proof
+- `Attestation`: Evaluation result with TEE score, Midnight transaction, and ledger commitment
 
 **API Endpoints:**
 ```
@@ -83,11 +79,11 @@ POST /api/v1/evaluation/callback          # TEE result callback
 - `project_service`: CRUD for projects
 - `commit_service`: CRUD for commits
 - `attestation_service`: Queues TEE evaluation, manages status transitions
-- `zktls_service`: Generates and validates zkTLS proofs
+- `midnight_service`: Manages Midnight Compact prover execution and ledger submissions
 
 **Integrations:**
 - `tee_worker.py`: Client for Phala TEE invocation
-- `solana_program.py`: Client for Solana Anchor program
+- `midnight_client.py`: Client for submitting verification txs to Midnight ledger
 
 ### TEE Agent (Phala Network)
 
@@ -113,53 +109,26 @@ POST /api/v1/evaluation/callback          # TEE result callback
 }
 ```
 
-### zkTLS / Reclaim Protocol
+### Midnight & Compact ZK Contract
 
-**Purpose:** Prove GitHub commit exists without revealing OAuth token or code
+**Purpose:** Prove commit validity off-chain without revealing private repository code or auth tokens, and anchor the verified status to the Midnight public state machine.
 
-**Input:** Commit hash, author, repository URL
-**Output:**
-```json
-{
-  "proof": "zktls_proof_...",
-  "claim": {
-    "epoch": 1688169600,
-    "identifier": "github.com/owner/repo#abc1234",
-    "owner": "John Doe",
-    "context": {
-      "provider": "github-api-tlsnotary",
-      "commit_hash": "abc1234567890",
-      "repository": "https://github.com/owner/repo"
-    }
-  },
-  "redactedParams": "Authorization,Cookie,token"
-}
-```
+**Language:** Compact (TypeScript-like domain-specific language for zero-knowledge smart contracts)
 
-### Solana Program (Anchor)
+**Contract: zkcap.compact**
 
-**Program: zkcap_attestation**
+**State Structure:**
+- **Private State:**
+  - `commit_hash`: Actual Git commit hash
+  - `author_signature`: GitHub author credentials signature
+  - `repository_id`: Repository identifier
+- **Public State:**
+  - `attestation_hash`: SHA-256 hash of project ID and commit hash, representing the public proof identifier.
+  - `is_verified`: Boolean tracking whether the attestation is verified and anchored on the ledger.
 
-**Accounts:**
-1. `ProjectAccount` - PDA seeds: `["project", project_id]`
-   - Tracks total attestations per project
-   - Stores project authority + repository URL
-
-2. `AttestationAccount` - PDA seeds: `["attestation", project_id, commit_hash]`
-   - Stores security_score
-   - Stores TEE hardware signature
-   - Stores zkTLS proof
-   - Links to SBT mint address
-
-**Instructions:**
-- `initialize_project(project_id, repository_url)` - Create project PDA
-- `record_attestation(project_id, commit_hash, security_score, tee_signature, zkTLS_proof)` - Record on-chain
-- `mint_sbt(recipient, project_id, commit_hash)` - Issue Soulbound Token
-
-**Events:**
-- `ProjectInitialized` - New project registered
-- `AttestationRecorded` - New verified milestone
-- `SBTMinted` - Soulbound token issued to developer
+**Public Transactions / Transitions:**
+- `initialize_project(project_id, owner_pubkey)` - Register a new project on the ledger.
+- `verify_and_anchor_attestation(project_id, attestation_hash, zk_proof)` - Verify a client-generated ZK proof on-chain and record the verified milestone in public ledger state.
 
 ### Frontend (Next.js)
 
@@ -189,9 +158,8 @@ POST /api/v1/evaluation/callback          # TEE result callback
 - Python 3.12+
 - Node.js 20+
 - PostgreSQL 15+
-- Rust & Cargo (for Solana)
-- Solana CLI
-- Anchor v0.29.0+
+- Midnight Compact Toolchain (`minokawa` compiler)
+- Midnight SDK
 
 ### 1. Backend Setup
 
@@ -216,18 +184,18 @@ alembic upgrade head
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. Solana Program Setup
+### 2. Midnight Contract Setup
 
 ```bash
-cd worker/blockchain
+cd worker/midnight
 
-# Build program
-anchor build
+# Compile the Compact contract
+compactc contract/zkcap.compact
 
-# Deploy to devnet
-anchor deploy --provider.cluster devnet
+# Deploy to Testnet using Midnight CLI/SDK
+npm run deploy:testnet
 
-# Copy program ID from output and update SOLANA_PROGRAM_ID in backend/.env
+# Copy the deployed contract address and update MIDNIGHT_CONTRACT_ADDRESS in backend/.env
 ```
 
 ### 3. TEE Agent Setup (Optional - for testing)
@@ -271,12 +239,11 @@ tee_pending (awaiting TEE evaluation)
   ↓
 tee_evaluated (TEE result received)
   ↓
-solana_recorded (on-chain recorded)
-  ├─ sbt_minted (if eligible & enabled)
+midnight_recorded (on-chain recorded)
   
 Error states:
   • error (TEE invocation failed)
-  • solana_error (blockchain recording failed)
+  • midnight_error (blockchain recording failed)
 ```
 
 ## Configuration Variables
@@ -290,15 +257,14 @@ Error states:
 - `TEE_CALLBACK_BASE_URL` - Your backend's public URL
 - `GROQ_API_KEY` - Groq LLM API key
 
-### Solana Integration
-- `SOLANA_PROGRAM_ID` - Deployed Anchor program ID
-- `SOLANA_RPC_ENDPOINT` - Solana cluster RPC URL
-- `SOLANA_OPERATOR_KEYPAIR_PATH` - Path to operator wallet
-- `ENABLE_SOLANA_ANCHORING` - Set to True to enable
+### Midnight Integration
+- `MIDNIGHT_CONTRACT_ADDRESS` - Deployed Compact contract address
+- `MIDNIGHT_RPC_ENDPOINT` - Midnight node RPC endpoint
+- `MIDNIGHT_OPERATOR_KEY_PATH` - Path to operator wallet key
+- `ENABLE_MIDNIGHT_ANCHORING` - Set to True to enable on-chain anchoring
 
 ### Optional
-- `ENABLE_ZKTLS_PROOFS` - Enable zkTLS proof generation
-- `RECLAIM_API_KEY` - Reclaim Protocol API key
+- `ENABLE_MIDNIGHT_ZK_PROOFS` - Enable Midnight zero-knowledge proof generation
 - `DEBUG` - Set to True for verbose logging
 
 ## API Examples
@@ -356,7 +322,7 @@ curl http://localhost:8000/api/v1/attestations/1 | jq .
 ### In Production
 - **Rotate secrets regularly**: GitHub webhook secret, Groq API key
 - **Use HTTPS everywhere**: Backend, TEE callbacks, webhook URLs
-- **Secure keypair storage**: Use AWS Secrets Manager or HashiCorp Vault for Solana keypair
+- **Secure keypair storage**: Use AWS Secrets Manager or HashiCorp Vault for Midnight key
 - **Rate limiting**: Add rate limiting to endpoints
 - **CORS configuration**: Restrict CORS to known frontend domains
 - **Input validation**: All Pydantic schemas validate strictly
@@ -367,9 +333,9 @@ curl http://localhost:8000/api/v1/attestations/1 | jq .
 - Code and data are encrypted in TEE memory
 
 ### Blockchain Security
-- Solana program is immutable once deployed
-- PDAs ensure deterministic account derivation
-- Cross-program invocations (CPIs) for SBT minting
+- Midnight contract compiles to deterministic zero-knowledge circuits
+- Private states ensure off-chain data confidentiality
+- Public state updates reflect verification on the public ledger
 
 ## Troubleshooting
 
@@ -378,9 +344,9 @@ curl http://localhost:8000/api/v1/attestations/1 | jq .
 - Verify `TEE_CALLBACK_BASE_URL` is accessible from TEE
 - Check backend logs for HTTP errors
 
-**Solana transaction failed**
-- Ensure `SOLANA_OPERATOR_KEYPAIR_PATH` exists and has SOL balance
-- Verify `SOLANA_PROGRAM_ID` matches deployed program
+**Midnight transaction failed**
+- Ensure `MIDNIGHT_OPERATOR_KEY_PATH` exists and has tDUST balance
+- Verify `MIDNIGHT_CONTRACT_ADDRESS` matches deployed program
 - Check RPC endpoint is responsive
 
 **Frontend not updating**
@@ -401,25 +367,24 @@ logger.error(f"TEE invocation failed: {error}")
 
 Monitor these in production:
 - Backend `/logs` endpoint (if exposed)
-- Solana program events (via Solana RPC)
+- Midnight transaction records and ledger events
 - TEE callback delivery (HTTP 2xx responses)
 - Frontend console (browser DevTools)
 
 ## Next Steps for Production
 
-1. **Deploy Solana program to mainnet-beta**
-   - Update `SOLANA_PROGRAM_ID` and `SOLANA_RPC_ENDPOINT`
+1. **Deploy Midnight contract to mainnet**
+   - Update `MIDNIGHT_CONTRACT_ADDRESS` and `MIDNIGHT_RPC_ENDPOINT`
 
 2. **Configure Phala Network mainnet**
    - Update `PHALA_TEE_ENDPOINT` to production
 
-3. **Enable Reclaim Protocol**
-   - Set `ENABLE_ZKTLS_PROOFS=True`
-   - Configure `RECLAIM_API_KEY`
+3. **Enable Midnight ZK Proofs**
+   - Set `ENABLE_MIDNIGHT_ZK_PROOFS=True`
 
 4. **Add monitoring & alerts**
    - Set up Datadog, New Relic, or similar
-   - Alert on failed attestations or Solana errors
+   - Alert on failed attestations or Midnight errors
 
 5. **Load testing**
    - Test with realistic commit volume
@@ -434,7 +399,6 @@ Monitor these in production:
 ## Support & Resources
 
 - **Phala Network**: https://phala.network
-- **Solana Anchor**: https://www.anchor-lang.com
-- **Reclaim Protocol**: https://www.reclaimprotocol.org
+- **Midnight Network**: https://midnight.network
 - **FastAPI**: https://fastapi.tiangolo.com
 - **Next.js**: https://nextjs.org

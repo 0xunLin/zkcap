@@ -1,0 +1,62 @@
+pragma language_version 0.23;
+
+import CompactStandardLibrary;
+
+// Struct representing a verified milestone stored publicly on the ledger.
+export struct MilestoneRecord {
+    project_id: Bytes<32>,
+    security_score: Uint<64>,
+    timestamp: Uint<64>
+}
+
+// Struct representing the private commit details that remain off-chain on the client.
+export struct PrivateCommitData {
+    repository_id: Bytes<32>,
+    commit_hash: Bytes<32>,
+    author_signature: Bytes<32>
+}
+
+// Public ledger state (replicated on-chain)
+export ledger registered_projects: Map<Bytes<32>, Boolean>;
+export ledger verified_milestones: Map<Bytes<32>, MilestoneRecord>;
+
+// Witness declaration to query private data locally from the TypeScript runner
+witness get_private_commit_data(): PrivateCommitData;
+
+// Circuit to register a project on the public ledger
+export circuit register_project(project_id: Bytes<32>): [] {
+    registered_projects.insert(disclose(project_id), true);
+}
+
+// Circuit to verify the private commit data off-chain and update public ledger state on success
+export circuit verify_and_anchor_attestation(
+    project_id: Bytes<32>,
+    attestation_hash: Bytes<32>,
+    security_score: Uint<64>,
+    timestamp: Uint<64>
+): [] {
+    // 1. Assert that the project is registered
+    assert(registered_projects.member(disclose(project_id)), "Project is not registered");
+
+    // 2. Fetch the private commit data from the local witness
+    const private_data = get_private_commit_data();
+
+    // 3. Verify the private data belongs to the correct project
+    assert(private_data.repository_id == project_id, "Project ID mismatch");
+
+    // 4. Verify that the private commit hash matches the public attestation hash commitment
+    // We compute a persistent hash using the private commit_hash
+    const calculated_hash = persistentHash<Bytes<32>>(private_data.commit_hash);
+    assert(calculated_hash == attestation_hash, "Attestation hash mismatch");
+
+    // 5. Update the public ledger state to record the verified milestone and security score.
+    // Wrap key and values in disclose() to write them to the public ledger.
+    verified_milestones.insert(
+        disclose(attestation_hash),
+        MilestoneRecord {
+            project_id: disclose(project_id),
+            security_score: disclose(security_score),
+            timestamp: disclose(timestamp)
+        }
+    );
+}

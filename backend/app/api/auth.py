@@ -16,7 +16,7 @@ from app.models.user import User
 from app.core.auth import create_access_token, get_current_user
 from app.schemas.auth import GitHubAuthRequest, AuthTokenResponse, UserResponse
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/github", response_model=AuthTokenResponse)

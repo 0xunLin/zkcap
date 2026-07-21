@@ -17,16 +17,17 @@ This roadmap defines the 4-phase execution plan for the S.N. Bose Summer Interns
 - [ ] Deploy agent to Phala Network Testnet.
 - [ ] Connect TEE hardware signature callback to FastAPI backend.
 
-## Phase 3: The Data Bridge (zkTLS Protocol)
+## Phase 3: The Private Prover (Midnight & Compact Client)
 > Implement cryptographic proof of data existence without IP leakage.
-- [ ] Integrate Reclaim Protocol / TLSNotary SDK.
-- [ ] Generate zero-knowledge proofs of GitHub commit APIs.
-- [ ] Validate zkTLS proofs on the backend before Solana submission.
+- [x] Install and configure the Midnight Compact (`minokawa` compiler) toolchain.
+- [x] Write the client-side private contract code in Compact (`zkcap.compact`) to verify commit metadata.
+- [x] Generate WASM/JS prover code and compile zero-knowledge circuits.
+- [x] Integrate generated client-side prover into the backend attestation service.
 
-## Phase 4: The Trust Anchor (Solana & SBTs)
+## Phase 4: The Trust Anchor (Midnight Ledger State)
 > Anchor verified proofs to a decentralized state machine.
-- [ ] Initialize Anchor workspace (`worker/blockchain`).
-- [ ] Write Rust smart contract to derive `Project` and `Milestone` PDAs.
-- [ ] Write verification instructions to require both TEE + zkTLS proofs.
-- [ ] Implement CPIs to mint non-transferable Soulbound Tokens (SBTs) upon success.
-- [ ] Integrate `@solana/web3.js` wallet adapter into the Next.js dashboard.
+- [x] Deploy compiled Compact ledger contract to the Midnight Testnet.
+- [x] Implement public state transitions in Compact to verify ZK proofs and store the attestation state.
+- [x] Integrate Midnight TypeScript SDK (`@midnight-ntwrk/sdk`) for ledger anchoring.
+- [x] Connect backend attestation workflow to submit transaction proofs on-chain.
+- [x] Update Next.js dashboard to verify state proofs and link to Midnight transaction explorers.

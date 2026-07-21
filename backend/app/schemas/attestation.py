@@ -19,15 +19,15 @@ class TEEExecution(BaseModel):
     quote: Optional[str] = None
 
 class AttestationBase(BaseModel):
-    commit_id: int
-    attestation_hash: str
+    commit_id: str
+    attestation_hash: Optional[str] = None
     status: str = "pending"
 
 class AttestationCreate(AttestationBase):
     pass
 
 class Attestation(AttestationBase):
-    id: int
+    id: str
     tee_invocation_id: Optional[str] = None
     tee_evaluation: Optional[TEEEvaluation] = None
     tee_execution: Optional[TEEExecution] = None
@@ -40,3 +40,24 @@ class Attestation(AttestationBase):
 
     class Config:
         from_attributes = True
+
+class AttestationCreateRequest(BaseModel):
+    project_id: str
+    repository_id: str
+    security_score: int
+
+class AttestationResponse(BaseModel):
+    id: str
+    project_id: str
+    repository_id: str
+    security_score: int
+    status: str
+    timestamp: datetime
+    onchain_tx: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class OnchainResponse(BaseModel):
+    status: str
+    message: str

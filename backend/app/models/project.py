@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import String, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.session import Base
+from app.database.base_class import Base
 
 
 class Project(Base):
@@ -34,6 +34,10 @@ class Project(Base):
     commits: Mapped[list["Commit"]] = relationship(
         "Commit", back_populates="project", cascade="all, delete-orphan"
     )
+
+    @property
+    def commit_count(self) -> int:
+        return len(self.commits)
 
     def __repr__(self) -> str:
         return f"<Project {self.name}>"
